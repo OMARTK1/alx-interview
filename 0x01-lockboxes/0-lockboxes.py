@@ -1,6 +1,11 @@
 #!/usr/bin/python3
+"""Script that unlock list of lists"""
+
 
 def canUnlockAll(boxes):
+    """Function that takes list of lists and the hey in it
+       will unlock next lists
+    """
     if not boxes:
         return False
 
