@@ -1,17 +1,20 @@
 #!/usr/bin/node
+import { promisify } from 'util';
+const request = promisify(require('request'));
+const planetsID = process.argv[2];
 
-const request = require('request');
+async function starwarsCharacters (planetsID) {
+  const endpoint = 'https://swapi-api.alx-tools.com/api/planets/3/' + planetsID;
+  let response = await (await request(endpoint)).body;
+  response = JSON.parse(response);
+  const characters = response.characters;
 
-request('https://swapi-api.hbtn.io/api/films/' + process.argv[2], function (err, res, body) {
-    if (err) throw err;
-    const actors = JSON.parse(body).characters;
-    exactOrder(actors, 0);
-});
-const exactOrder = (actors, x) => {
-    if (x === actors.length) return;
-    request(actors[x], function (err, res, body) {
-        if (err) throw err;
-        console.log(JSON.parse(body).name);
-        exactOrder(actors, x + 1);
-    });
-};
+  for (let i = 0; i < characters.length; i++) {
+    const urlCharacter = characters[i];
+    let character = await (await request(urlCharacter)).body;
+    character = JSON.parse(character);
+    console.log(character.name);
+  }
+}
+
+starwarsCharacters(planetsID);
