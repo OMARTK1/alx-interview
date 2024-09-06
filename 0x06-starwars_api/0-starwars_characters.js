@@ -1,40 +1,25 @@
 #!/usr/bin/node
+// Script that prints all IDs of a Star Wars movie
 
 const request = require('request');
 
-const movieId = process.argv[2];
-if (!movieId) {
-  console.error('Please provide a Movie ID');
-  process.exit(1);
-}
-
-const apiUrl = `https://swapi-api.alx-tools.com/api/films/${movieId}/`;
-
-request(apiUrl, (err, res, body) => {
-  if (err) {
-    console.error(err);
-    return;
+const movie = process.argv[2];
+const api = 'https://swapi-api.hbtn.io/api/';
+const url = api + 'films/' + movie + '/';
+request.get({ url: url }, function (error, response, body) {
+  if (!error) {
+    const characters = JSON.parse(body).characters;
+    order(characters);
   }
-
-  const movieData = JSON.parse(body);
-  const characterUrls = movieData.characters;
-
-  const promises = characterUrls.map(url => {
-    return new Promise((resolve, reject) => {
-      request(url, (err, res, body) => {
-        if (err) {
-          reject(err);
-        } else {
-          const characterData = JSON.parse(body);
-          resolve(characterData.name);
-        }
-      });
-    });
-  });
-
-  Promise.all(promises)
-    .then(names => {
-      names.forEach(name => console.log(name));
-    })
-    .catch(err => console.error(err));
 });
+
+function order (characters) {
+  if (characters.length > 0) {
+    request.get({ url: characters.shift() }, function (err, res, body) {
+      if (!err) {
+        console.log(JSON.parse(body).name);
+        order(characters);
+      }
+    });
+  }
+}
