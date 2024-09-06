@@ -1,20 +1,40 @@
 #!/usr/bin/node
-import { promisify } from 'util';
-const request = promisify(require('request'));
-const planetsID = process.argv[2];
 
-async function starwarsCharacters (planetsID) {
-  const endpoint = 'https://swapi-api.alx-tools.com/api/planets/3/' + planetsID;
-  let response = await (await request(endpoint)).body;
-  response = JSON.parse(response);
-  const characters = response.characters;
+const request = require('request');
 
-  for (let i = 0; i < characters.length; i++) {
-    const urlCharacter = characters[i];
-    let character = await (await request(urlCharacter)).body;
-    character = JSON.parse(character);
-    console.log(character.name);
-  }
+const movieId = process.argv[2];
+if (!movieId) {
+  console.error('Please provide a Movie ID');
+  process.exit(1);
 }
 
-starwarsCharacters(planetsID);
+const apiUrl = `https://swapi-api.alx-tools.com/api/films/${movieId}/`;
+
+request(apiUrl, (err, res, body) => {
+  if (err) {
+    console.error(err);
+    return;
+  }
+
+  const movieData = JSON.parse(body);
+  const characterUrls = movieData.characters;
+
+  const promises = characterUrls.map(url => {
+    return new Promise((resolve, reject) => {
+      request(url, (err, res, body) => {
+        if (err) {
+          reject(err);
+        } else {
+          const characterData = JSON.parse(body);
+          resolve(characterData.name);
+        }
+      });
+    });
+  });
+
+  Promise.all(promises)
+    .then(names => {
+      names.forEach(name => console.log(name));
+    })
+    .catch(err => console.error(err));
+});
